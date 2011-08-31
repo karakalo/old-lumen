@@ -45,6 +45,9 @@ with Lumen.Binary;
 with Lumen.Internal;
 use  Lumen.Internal;
 
+with GL.GLX;
+use GL.GLX;
+
 package body Lumen.Window is
 
    ---------------------------------------------------------------------------
@@ -74,51 +77,24 @@ package body Lumen.Window is
    pragma Import (C, X_Intern_Atom, "XInternAtom");
 
    procedure X_Set_Class_Hint (Display : in Display_Pointer;
-                               Window  : in Window_ID;
+                               Window  : in GLX_Drawable;
                                Hint    : in X_Class_Hint);
    pragma Import (C, X_Set_Class_Hint, "XSetClassHint");
 
    procedure X_Set_Icon_Name (Display : in Display_Pointer;
-                              Window  : in Window_ID;
+                              Window  : in GLX_Drawable;
                               Name    : in System.Address);
    pragma Import (C, X_Set_Icon_Name, "XSetIconName");
 
    procedure X_Set_WM_Icon_Name (Display   : in Display_Pointer;
-                                 Window    : in Window_ID;
+                                 Window    : in GLX_Drawable;
                                  Text_Prop : in System.Address);
    pragma Import (C, X_Set_WM_Icon_Name, "XSetWMIconName");
 
    procedure X_Set_WM_Name (Display   : in Display_Pointer;
-                            Window    : in Window_ID;
+                            Window    : in GLX_Drawable;
                             Text_Prop : in System.Address);
    pragma Import (C, X_Set_WM_Name, "XSetWMName");
-
-   ---------------------------------------------------------------------------
-
-   GL_TRUE : constant Character := Character'Val (1);
-
-   -- GLX stuff needed by more than one of the routines below
-   function GLX_Create_Context (Display    : Display_Pointer;
-                                Visual     : X_Visual_Info_Pointer;
-                                Share_List : GLX_Context;
-                                Direct     : Character)
-   return GLX_Context;
-   pragma Import (C, GLX_Create_Context, "glXCreateContext");
-
-   function GLX_Make_Current (Display  : Display_Pointer;
-                              Drawable : Window_ID;
-                              Context  : GLX_Context)
-   return Character;
-   pragma Import (C, GLX_Make_Current, "glXMakeCurrent");
-
-   function GLX_Make_Context_Current (Display  : Display_Pointer;
-                                      Draw     : Window_ID;
-                                      Read     : Window_ID;
-                                      Context  : GLX_Context)
-   return Character;
-   pragma Import (C, GLX_Make_Context_Current, "glXMakeContextCurrent");
-
-   ---------------------------------------------------------------------------
 
    -- Create a native window
    procedure Create (Win           : in out Handle;
@@ -174,14 +150,14 @@ package body Lumen.Window is
 
       -- Xlib functions needed only by Create
       function X_Create_Colormap (Display : Display_Pointer;
-                                  Window  : Window_ID;
+                                  Window  : GLX_Drawable;
                                   Visual  : System.Address;
                                   Alloc   : Alloc_Mode)
       return Colormap_ID;
       pragma Import (C, X_Create_Colormap, "XCreateColormap");
 
       function X_Create_Window (Display      : Display_Pointer;
-                                Parent       : Window_ID;
+                                Parent       : GLX_Drawable;
                                 X            : Position;
                                 Y            : Position;
                                 Width        : Dimension;
@@ -192,23 +168,23 @@ package body Lumen.Window is
                                 Visual       : System.Address;
                                 Valuemask    : X_Window_Attributes_Mask;
                                 Attributes   : System.Address)
-      return Window_ID;
+      return GLX_Drawable;
       pragma Import (C, X_Create_Window, "XCreateWindow");
 
       function X_Default_Screen (Display : Display_Pointer) return Screen_Number;
       pragma Import (C, X_Default_Screen, "XDefaultScreen");
 
-      procedure X_Map_Window (Display : in Display_Pointer;   Window : in Window_ID);
+      procedure X_Map_Window (Display : in Display_Pointer;   Window : in GLX_Drawable);
       pragma Import (C, X_Map_Window, "XMapWindow");
 
       function X_Open_Display (Display_Name : System.Address := System.Null_Address) return Display_Pointer;
       pragma Import (C, X_Open_Display, "XOpenDisplay");
 
-      function X_Root_Window (Display : Display_Pointer;   Screen_Num : Screen_Number) return Window_ID;
+      function X_Root_Window (Display : Display_Pointer;   Screen_Num : Screen_Number) return GLX_Drawable;
       pragma Import (C, X_Root_Window, "XRootWindow");
 
       procedure X_Set_WM_Protocols (Display   : in Display_Pointer;
-                                    Window    : in Window_ID;
+                                    Window    : in GLX_Drawable;
                                     Protocols : in System.Address;
                                     Count     : in Integer);
       pragma Import (C, X_Set_WM_Protocols, "XSetWMProtocols");
@@ -263,13 +239,13 @@ package body Lumen.Window is
       Con_Attributes : GLX_Attribute_List := (others => Context_Attribute_Name'Pos (Attr_None));
       Con_Attr_Index : Positive := Con_Attributes'First;
       Our_Context    : GLX_Context;
-      Did            : Character;
+      Did            : Bool;
       Display        : Display_Pointer;
       Mapped         : Map_Event_Data;
-      Our_Parent     : Window_ID;
+      Our_Parent     : GLX_Drawable;
       Visual         : X_Visual_Info_Pointer;
       Win_Attributes : X_Set_Window_Attributes;
-      Window         : Window_ID;
+      Window         : GLX_Drawable;
 
       ------------------------------------------------------------------------
 
@@ -481,15 +457,15 @@ package body Lumen.Window is
       -- Connect the OpenGL context to the new X window
       if Context = No_Context then
          Our_Context := GLX_Create_Context (Display, Visual, GLX_Context (System.Null_Address),
-                                            Character'Val (Boolean'Pos (Direct)));
+                                            Bool (Direct));
       else
          Our_Context := Context;
       end if;
-      if Our_Context = Null_Context then
+      if Our_Context = Internal.Null_Context then
          raise Context_Failed with "Cannot create OpenGL context";
       end if;
       Did := GLX_Make_Current (Display, Window, Our_Context);
-      if Did /= GL_TRUE then
+      if not Did then
          raise Context_Failed with "Cannot make OpenGL context current";
       end if;
 
@@ -514,7 +490,7 @@ package body Lumen.Window is
    -- Destroy a native window, including its current rendering context.
    procedure Destroy (Win : in out Handle) is
 
-      procedure X_Destroy_Window (Display : in Display_Pointer;   Window : in Window_ID);
+      procedure X_Destroy_Window (Display : in Display_Pointer;   Window : in GLX_Drawable);
       pragma Import (C, X_Destroy_Window, "XDestroyWindow");
 
       procedure Free is new Ada.Unchecked_Deallocation (Window_Info, Handle);
@@ -574,7 +550,7 @@ package body Lumen.Window is
    return Context_Handle is
    begin  -- Create_Context
       return GLX_Create_Context (Win.Display, Win.Visual, GLX_Context (System.Null_Address),
-                                 Character'Val (Boolean'Pos (Direct)));
+                                 Bool (Direct));
    end Create_Context;
 
    ---------------------------------------------------------------------------
@@ -596,7 +572,7 @@ package body Lumen.Window is
    -- Select a window to use for subsequent OpenGL calls
    procedure Make_Current (Win : in Handle) is
    begin  -- Make_Current
-      if GLX_Make_Current (Win.Display, Win.Window, Win.Context) /= GL_TRUE then
+      if not GLX_Make_Current (Win.Display, Win.Window, Win.Context) then
          raise Context_Failed with "Cannot make given OpenGL context current";
       end if;
    end Make_Current;
@@ -607,7 +583,7 @@ package body Lumen.Window is
    procedure Set_Context (Win     : in out Handle;
                           Context : in     Context_Handle) is
    begin  -- Set_Context
-      if GLX_Make_Current (Win.Display, Win.Window, Context) = GL_TRUE then
+      if not GLX_Make_Current (Win.Display, Win.Window, Context) then
          Win.Context := Context;
       else
          raise Context_Failed with "Cannot select given OpenGL context";
@@ -621,7 +597,7 @@ package body Lumen.Window is
    -- for smooth animation.
    procedure Swap (Win : in Handle) is
 
-      procedure GLX_Swap_Buffers (Display : in Display_Pointer;   Window : in Window_ID);
+      procedure GLX_Swap_Buffers (Display : in Display_Pointer;   Window : in GLX_Drawable);
       pragma Import (C, GLX_Swap_Buffers, "glXSwapBuffers");
 
    begin  -- Swap

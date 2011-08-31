@@ -26,6 +26,8 @@ with Lumen.Events.Key_Translate;
 with Lumen.Internal;
 with Lumen.Window;
 
+with GL.GLX;
+
 package body Lumen.Events is
 
    ---------------------------------------------------------------------------
@@ -81,7 +83,7 @@ package body Lumen.Events is
    -- Useful for more complex event loops.
    function Pending (Win : Window.Handle) return Natural is
 
-      function X_Pending (Display : Internal.Display_Pointer) return Natural;
+      function X_Pending (Display : GL.GLX.Display_Pointer) return Natural;
       pragma Import (C, X_Pending, "XPending");
 
    begin  -- Pending

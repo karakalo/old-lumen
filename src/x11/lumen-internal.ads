@@ -23,41 +23,17 @@
 with System;
 with Ada.Calendar;
 
+with GL.GLX;
+use GL.GLX;
 
 package Lumen.Internal is
 
-   ---------------------------------------------------------------------------
+   subtype GL_Context is GL.GLX.GLX_Context;
+   Null_Context : constant GL_Context := GL.GLX.Null_Context;
 
    -- Xlib stuff needed for our window info record
    type Atom            is new Long_Integer;
-   type Display_Pointer is new System.Address;
    Null_Display_Pointer : constant Display_Pointer := Display_Pointer (System.Null_Address);
-   type Screen_Depth    is new Natural;
-   type Screen_Number   is new Natural;
-   type Visual_ID       is new Long_Integer;
-   type Window_ID       is new Long_Integer;
-
-   type X_Visual_Info is record
-      Visual        : System.Address;
-      Visual_Ident  : Visual_ID;
-      Screen        : Screen_Number;
-      Depth         : Screen_Depth;
-      Class         : Integer;
-      Red_Mask      : Long_Integer;
-      Green_Mask    : Long_Integer;
-      Blue_Mask     : Long_Integer;
-      Colormap_Size : Natural;
-      Bits_Per_RGB  : Natural;
-   end record;
-   type X_Visual_Info_Pointer is access all X_Visual_Info;
-
-   ---------------------------------------------------------------------------
-
-   -- The GL rendering context type
-   type GLX_Context is new System.Address;
-   Null_Context : constant GLX_Context := GLX_Context (System.Null_Address);
-
-   ---------------------------------------------------------------------------
 
    -- A time that won't ever happen during the execution of a Lumen app
    Never : constant Ada.Calendar.Time := Ada.Calendar.Time_Of (Year  => Ada.Calendar.Year_Number'First,
@@ -66,7 +42,7 @@ package Lumen.Internal is
    -- The native window type
    type Window_Info is record
       Display     : Display_Pointer       := Null_Display_Pointer;
-      Window      : Window_ID             := 0;
+      Window      : GLX_Drawable          := 0;
       Visual      : X_Visual_Info_Pointer := null;
       Width       : Natural               := 0;
       Height      : Natural               := 0;

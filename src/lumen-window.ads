@@ -30,7 +30,7 @@ package Lumen.Window is
    type Handle is access Internal.Window_Info;
 
    -- Handle for an OpenGL rendering context
-   subtype Context_Handle is Internal.GLX_Context;
+   subtype Context_Handle is Internal.GL_Context;
 
    -- Null window; in X, this means the root window is the parent
    No_Window : constant Handle := null;
@@ -195,10 +195,5 @@ package Lumen.Window is
 
    -- Return current window width
    function Height (Win : in Handle) return Natural;
-
-private
-
-   pragma Linker_Options ("-lX11");
-   pragma Linker_Options ("-lGL");
 
 end Lumen.Window;

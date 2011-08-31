@@ -7,7 +7,7 @@ library project OpenGL is
    for Library_Name use "AdaOpenGL";
    case Os is
       when "Windows" => for Source_Dirs use ("gl", "gl/wgl");
-      when "Linux" => for Source_Dirs use ("gl");
+      when "Linux" => for Source_Dirs use ("gl", "gl/glx");
       when "MacOSX" => for Source_Dirs use ("gl", "gl/cgl");
    end case;
 
@@ -32,7 +32,7 @@ library project OpenGL is
             for Linker_Options use ("-lOpenGL32", "-lGdi32");
 
          when "Linux" =>
-            for Linker_Options use ("-lGL");
+            for Linker_Options use ("-lGL", "-lX11");
 
          when "MacOSX" =>
             for Linker_Options use ("-Wl,-framework,OpenGL");
