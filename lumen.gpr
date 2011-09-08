@@ -7,9 +7,15 @@ library project Lumen is
    Os : Os_Type := external ("OS", "Linux");
 
    case Os is
-      when "Windows" => for Source_Dirs use ("src");
-      when "Linux" => for Source_Dirs use ("src", "src/x11");
-      when "MacOSX" => for Source_Dirs use ("src");
+      when "Windows" =>
+         for Source_Dirs use ("src");
+         for Languages use ("Ada");
+      when "Linux" =>
+         for Source_Dirs use ("src", "src/x11");
+         for Languages use ("Ada");
+      when "MacOSX" =>
+         for Source_Dirs use ("src", "src/cocoa");
+         for Languages use ("Ada", "ObjC");
    end case;
    for Object_Dir use "obj";
    for Library_Name use "lumen";
@@ -18,14 +24,35 @@ library project Lumen is
    package Ide is
       for Vcs_Kind use "Git";
    end Ide;
-
+   
+   package Naming is
+      for Spec_Suffix ("ObjC") use ".h";
+      for Body_Suffix ("ObjC") use ".m";
+   end Naming;
+   
    package Builder is
       for Default_Switches ("ada") use ("-s");
    end Builder;
 
    package Compiler is
       for Default_Switches ("ada") use ("-gnat05", "-gnatn", "-fstack-check");
+      for Driver ("ObjC") use "gcc";
+      for Default_Switches ("ObjC") use ("-c");
    end Compiler;
+
+   package Linker is
+      case Os is
+         when "Windows" =>
+            for Linker_Options use ("-lOpenGL32");
+
+         when "Linux" =>
+            for Linker_Options use ("-lGL", "-lGLU");
+
+         when "MacOSX" =>
+            for Linker_Options use ("-Wl,-framework,OpenGL,-framework,Cocoa,-framework,Foundation,-lobjc");
+      end case;
+   end Linker;
+
 
 end Lumen;
 

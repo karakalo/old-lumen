@@ -6,11 +6,16 @@ with "lumen.gpr";
 
 project Demos is
 
+   type Os_Type is
+      ("Windows", "Linux", "MacOSX");
+   Os : Os_Type := external ("OS", "Linux");
+
    for Source_Dirs use ("demo");
    for Object_Dir use "demo/obj";
    for Main use ("colors.adb", "sgi_simple.adb", "spinner.adb", "texture.adb",
                  "text1.adb", "text2.adb", "multi.adb", "blending");
    for Exec_Dir use "bin";
+
 
    package Ide is
       for Vcs_Kind use "Git";
@@ -25,7 +30,10 @@ project Demos is
    end Compiler;
 
    package Linker is
-      for Default_Switches ("ada") use ("-lGLU");
+      case Os is
+         when "Linux" | "Windows" => for Default_Switches ("ada") use ("-lGLU");
+         when "MacOSX" => for Default_Switches ("ada") use ("-Wl,-framework,OpenGL");
+      end case;
    end Linker;
 
 end Demos;
