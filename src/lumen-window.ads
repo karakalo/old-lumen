@@ -22,6 +22,10 @@
 
 with Lumen.Events; use Lumen.Events;
 with Lumen.Events.Key_Translate; use Lumen.Events.Key_Translate;
+with opengl.Display,
+     opengl.surface_Profile,
+     opengl.Surface,
+     opengl.Context;
 with Ada.Calendar;
 
 package Lumen.Window is
@@ -237,6 +241,15 @@ private
       record
          Height      : Natural;
          Width       : Natural;
+
+         gl_Display    : aliased opengl.Display.item;
+         gl_Profile    :         opengl.surface_Profile.item;
+         gl_Surface    : aliased opengl.Surface.item;
+         gl_Context    :         opengl.Context.item;
       end record;
+
+
+   -- Defines the openGL display, surface profile, surface and context for the window.
+   procedure setup_GL (Win : in out Window_Type;   Window_Id : in Natural);
 
 end Lumen.Window;

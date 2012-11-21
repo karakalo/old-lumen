@@ -22,7 +22,7 @@ begin  -- Colors
 
    -- Create Lumen window, accepting most defaults; turn double buffering off
    -- for simplicity
-   Lumen.Window.Create (Win, Name => "Ooh, Colors!", Animated => False);
+   Lumen.Window.Create (Win, Name => "Ooh, EGL Colors!", Animated => False);
    Win.Key_Press:=Key_Press'Unrestricted_Access;
 
    -- Loop until user hits a key or clicks the window's Close button
@@ -40,11 +40,13 @@ begin  -- Colors
          Clear_Color (1.0, 0.0, 0.0, 1.0);
          Clear (GL_COLOR_BUFFER_BIT);
          Flush;
+         Lumen.Window.swap (Win);
          delay 1.0;
           -- Green
          Clear_Color (0.0, 1.0, 0.0, 1.0);
          Clear (GL_COLOR_BUFFER_BIT);
          Flush;
+         Lumen.Window.swap (Win);
          if not Lumen.Window.Process_Events(Win) then
             exit;
          end if;
@@ -56,6 +58,7 @@ begin  -- Colors
          Clear_Color (0.0, 0.0, 1.0, 1.0);
          Clear (GL_COLOR_BUFFER_BIT);
          Flush;
+         Lumen.Window.swap (Win);
          if not Lumen.Window.Process_Events(Win) then
             exit;
          end if;

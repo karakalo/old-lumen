@@ -43,6 +43,7 @@ with Lumen.Binary;
 -- This is really "part of" this package, just packaged separately so it can
 -- be used in Events
 with X11; use X11;
+with opengl.surface_Profile;
 
 package body Lumen.Window is
 
@@ -51,13 +52,17 @@ package body Lumen.Window is
          Display : Display_Pointer       := Null_Display_Pointer;
          Window  : Window_ID             := 0;
          Visual  : X_Visual_Info_Pointer := null;
-         Context : GLX_Context           := Null_Context;
       end record;
    type X11Window_Handle is access all X11Window_Type;
 
    ---------------------------------------------------------------------------
 
    String_Encoding : String := "STRING" & ASCII.NUL;
+
+
+   procedure setup_GL (Win : in out Window_Type;   Window_Id : in Natural) is separate;
+
+
 
    -- Create a native window
    procedure Create (Win           : in out Window_Handle;
@@ -82,7 +87,7 @@ package body Lumen.Window is
       Structure_Notify_Mask : constant X_Event_Mask := 2#0000_0010_0000_0000_0000_0000#;  -- 17th bit, always want this one
 
       -- Variables used in Create
-      Our_Context    : GLX_Context;
+--        Our_Context    : GLX_Context;
       Did            : Character;
       Display        : Display_Pointer;
       Mapped         : Map_Event_Data;
@@ -314,18 +319,12 @@ package body Lumen.Window is
          X_Set_Class_Hint (Display, Window, (Class_String, Instance_String));
       end;
 
-      -- Connect the OpenGL context to the new X window
-      Our_Context := GLX_Create_Context (Display, Visual, GLX_Context (System.Null_Address),
-                                            Character'Val (Boolean'Pos (Direct)));
-      if Our_Context = Null_Context then
-         raise Context_Failed with "Cannot create OpenGL context";
-      end if;
-      Did := GLX_Make_Current (Display, Window, Our_Context);
-      if Did /= GL_TRUE then
-         raise Context_Failed with "Cannot make OpenGL context current";
-      end if;
+
 
       XWin := new X11Window_Type;
+
+      XWin.setup_GL (Natural (Window));
+
       XWin.Display     := Display;
       XWin.Window      := Window;
       XWin.Visual      := Visual;
@@ -337,7 +336,6 @@ package body Lumen.Window is
       XWin.App_Frames  := 0;
       XWin.Last_Frames := 0;
       XWin.SPF         := 0.0;
-      XWin.Context     := Our_Context;
       XWin.Looping     := True;
 
       Win := Window_Handle(XWin);
@@ -405,28 +403,14 @@ package body Lumen.Window is
    ---------------------------------------------------------------------------
 
    -- Select a window to use for subsequent OpenGL calls
-   procedure Make_Current (Win : in Window_Handle) is
-      XWin : X11Window_Handle:=X11Window_Handle(Win);
-   begin  -- Make_Current
-      if GLX_Make_Current (XWin.Display, XWin.Window, XWin.Context) /= GL_TRUE then
-         raise Context_Failed with "Cannot make given OpenGL context current";
-      end if;
-   end Make_Current;
+   procedure Make_Current (Win : in Window_Handle) is separate;
 
    ---------------------------------------------------------------------------
 
    -- Promotes the back buffer to front; only valid if the window is double
    -- buffered, meaning Animated was true when the window was created.  Useful
    -- for smooth animation.
-   procedure Swap (Win : in Window_Handle) is
-      XWin : X11Window_Handle:=X11Window_Handle(Win);
-
-      procedure GLX_Swap_Buffers (Display : in Display_Pointer;   Window : in Window_ID);
-      pragma Import (C, GLX_Swap_Buffers, "glXSwapBuffers");
-
-   begin  -- Swap
-      GLX_Swap_Buffers (XWin.Display, XWin.Window);
-   end Swap;
+   procedure Swap (Win : in Window_Handle) is separate;
 
    ---------------------------------------------------------------------------
 

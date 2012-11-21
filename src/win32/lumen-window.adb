@@ -427,6 +427,8 @@ package body Lumen.Window is
    end WndProc;
    ---------------------------------------------------------------------------
 
+   procedure setup_GL (Win : in out Window_Type;   Window_Id : in Natural) is separate;
+
    procedure Create (Win           : in out Window_Handle;
                      Parent        : in     Window_Handle      := No_Window;
                      Width         : in     Natural            := 400;
@@ -555,50 +557,52 @@ package body Lumen.Window is
         (hWnd => NWin.WindowHandle);
 
       -- Setup OpenGL context
-      declare
-         pdf         : aliased PIXELFORMATDESCRIPTOR_Type;
-         PixelFormat : Interfaces.C.int;
-      begin
-         pdf.nSize    := PIXELFORMATDESCRIPTOR_Type'Size/8;
-         pdf.nVersion := 1;
-         pdf.dwFlags
-           := PFD_DRAW_TO_WINDOW
-           or PFD_SUPPORT_OPENGL;
-         pdf.iPixelType := PFD_TYPE_RGBA;
-         pdf.cColorBits := 24;
-         pdf.cDepthBits := 24;
-         pdf.iLayerType := PFD_MAIN_PLANE;
-         PixelFormat := ChoosePixelFormat
-           (hdc => NWin.DeviceContext,
-            ppfd => pdf'Access);
-         if PixelFormat=0 then
-            Destroy(Window_Handle(NWin));
-            raise FailedToCreateContext
-              with "Failed to pick a Pixelformat using ChoosePixelFormat. Error code :"
-                &Interfaces.C.int'Image(PixelFormat);
-         end if;
-         if GDI32.SetPixelFormat
-           (hdc          => NWin.DeviceContext,
-            iPixelFormat => PixelFormat,
-            ppfd         => pdf'Access)/=Standard.Win32.TRUE then
-            Destroy(Window_Handle(NWin));
-            raise FailedToCreateContext
-              with "Failed to set the Pixelformat using SetPixelFormat. Error code :"
-                &DWORD_Type'Image(GetLastError);
-         end if;
-      end;
-
-      NWin.RenderContext
-        :=wglCreateContext(NWin.DeviceContext);
-
-      if wglMakeCurrent
-        (hdc   => NWin.DeviceContext,
-         hglrc => NWin.RenderContext)/=Standard.Win32.TRUE then
-         Destroy(Window_Handle(NWin));
-         raise FailedToCreateContext
-           with "Failed call to wglMakeCurrent with "
-             &DWORD_Type'Image(GetLastError);
-      end if;
+      NWin.setup_GL (Natural (NWin.WindowHandle));
+      
+--      declare
+--         pdf         : aliased PIXELFORMATDESCRIPTOR_Type;
+--         PixelFormat : Interfaces.C.int;
+--      begin
+--         pdf.nSize    := PIXELFORMATDESCRIPTOR_Type'Size/8;
+--         pdf.nVersion := 1;
+--         pdf.dwFlags
+--           := PFD_DRAW_TO_WINDOW
+--           or PFD_SUPPORT_OPENGL;
+--         pdf.iPixelType := PFD_TYPE_RGBA;
+--         pdf.cColorBits := 24;
+--         pdf.cDepthBits := 24;
+--         pdf.iLayerType := PFD_MAIN_PLANE;
+--         PixelFormat := ChoosePixelFormat
+--           (hdc => NWin.DeviceContext,
+--            ppfd => pdf'Access);
+--         if PixelFormat=0 then
+--            Destroy(Window_Handle(NWin));
+--            raise FailedToCreateContext
+--              with "Failed to pick a Pixelformat using ChoosePixelFormat. Error code :"
+--                &Interfaces.C.int'Image(PixelFormat);
+--         end if;
+--         if GDI32.SetPixelFormat
+--           (hdc          => NWin.DeviceContext,
+--            iPixelFormat => PixelFormat,
+--            ppfd         => pdf'Access)/=Standard.Win32.TRUE then
+--            Destroy(Window_Handle(NWin));
+--            raise FailedToCreateContext
+--              with "Failed to set the Pixelformat using SetPixelFormat. Error code :"
+--                &DWORD_Type'Image(GetLastError);
+--         end if;
+--      end;
+--
+--      NWin.RenderContext
+--        :=wglCreateContext(NWin.DeviceContext);
+--
+--      if wglMakeCurrent
+--        (hdc   => NWin.DeviceContext,
+--         hglrc => NWin.RenderContext)/=Standard.Win32.TRUE then
+--         Destroy(Window_Handle(NWin));
+--         raise FailedToCreateContext
+--           with "Failed call to wglMakeCurrent with "
+--             &DWORD_Type'Image(GetLastError);
+--      end if;
 
       NWin.ContextInitialized:=True;
 
@@ -658,30 +662,30 @@ package body Lumen.Window is
 
    ---------------------------------------------------------------------------
 
-   procedure Make_Current (Win : in Window_Handle) is
-      Win32Win : Win32Window_Handle:=Win32Window_Handle(Win);
-
-      Result : Win32.BOOL_Type;
-      Pragma Unreferenced(Result);
-
-   begin  -- Make_Current
-
-      Result:=Win32.OpenGL32.wglMakeCurrent(Win32Win.DeviceContext,Win32Win.RenderContext);
-
-   end Make_Current;
+   procedure Make_Current (Win : in Window_Handle) is separate;
+--      Win32Win : Win32Window_Handle:=Win32Window_Handle(Win);
+--
+--      Result : Win32.BOOL_Type;
+--      Pragma Unreferenced(Result);
+--
+--   begin  -- Make_Current
+--
+--      Result:=Win32.OpenGL32.wglMakeCurrent(Win32Win.DeviceContext,Win32Win.RenderContext);
+--
+--   end Make_Current;
 
    ---------------------------------------------------------------------------
 
    -- Promotes the back buffer to front; only valid if the window is double
    -- buffered, meaning Animated was true when the window was created.  Useful
    -- for smooth animation.
-   procedure Swap (Win : in Window_Handle) is
-      Win32Win : Win32Window_Handle:=Win32Window_Handle(Win);
-      Result : BOOL_Type;
-      pragma Unreferenced(Result);
-   begin  -- Swap
-      Result:=Win32.OpenGL32.SwapBuffers(Win32Win.DeviceContext);
-   end Swap;
+   procedure Swap (Win : in Window_Handle) is separate;
+--      Win32Win : Win32Window_Handle:=Win32Window_Handle(Win);
+--      Result : BOOL_Type;
+--      pragma Unreferenced(Result);
+--   begin  -- Swap
+--      Result:=Win32.OpenGL32.SwapBuffers(Win32Win.DeviceContext);
+--   end Swap;
 
    ---------------------------------------------------------------------------
 

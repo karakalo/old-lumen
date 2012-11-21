@@ -1,5 +1,5 @@
-
 with "config";
+with "egl/library/egl";
 
 project Lumen is
 
