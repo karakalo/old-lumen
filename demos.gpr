@@ -1,4 +1,3 @@
-
 -- Chip Richards, NiEstu, Phoenix AZ, Spring 2010
 -- Updated May 2011 for new dir structure
 
@@ -7,30 +6,31 @@ with "config";
 
 project Demos is
 
+   type Os_Type is
+      ("Windows_NT", "Linux", "MacOSX");
    for Source_Dirs use ("demo");
    for Object_Dir use "demo/obj";
-   for Main use ("colors.adb",
-                 "sgi_simple.adb",
-                 "spinner.adb",
-                 "texture.adb",
-                 "text1.adb",
-                 "text2.adb",
-                 "multi.adb",
-                 "simple_2d",
-                 "simple_3d",
-                 "fire",
-                 "blending",
-                 "shaders",
-		 "vertex_buffers"
-                );
+   for Main use ("colors.adb", "sgi_simple.adb", "spinner.adb", "texture.adb", "text1.adb", "text2.adb", "multi.adb", "simple_2d", "simple_3d", "fire", "blending", "shaders", "vertex_buffers");
    for Exec_Dir use "bin";
+   OS : Os_Type := external ("OS");
 
    package Ide is
       for Vcs_Kind use "Git";
    end Ide;
 
    package Builder is
-      for Default_Switches ("ada") use ("-s");
+
+      case OS is
+
+         when "Windows_NT" =>
+            for Default_Switches ("ada") use ("-s");
+
+         when "Linux" =>
+            for Default_Switches ("ada") use ("-s", "-gnatwa");
+
+         when "MacOSX" =>
+            for Default_Switches ("ada") use ("-s");
+      end case;
    end Builder;
 
    package Compiler is
@@ -38,11 +38,17 @@ project Demos is
    end Compiler;
 
    package Linker is
-      case Config.oS is
+
+      case OS is
+
          when "Windows_NT" =>
-            for Default_Switches ("ada") use ("-lglu32","-lopengl32","-lGDI32");
-         when "Linux"|"MacOSX" =>
-            for Default_Switches ("ada") use ("-lGLU","-lGL","-lX11","-ldl");
+            for Default_Switches ("ada") use ("-lglu32", "-lopengl32", "-lGDI32");
+
+         when "Linux" =>
+            for Default_Switches ("ada") use ("-lGLU", "-lGL", "-lX11", "-ldl");
+
+         when "MacOSX" =>
+            for Default_Switches ("ada") use ("-lGLU", "-lGL", "-lX11", "-ldl");
       end case;
    end Linker;
 
